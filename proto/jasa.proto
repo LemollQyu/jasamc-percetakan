@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package jasa;
+
+option go_package = "proto/jasapb;jasapb";
+
+service JasaService {
+  rpc GetServiceDetail (GetServiceDetailRequest)
+      returns (GetServiceDetailResponse);
+}
+
+message GetServiceDetailRequest {
+  int64 service_id = 1;
+}
+
+message GetServiceDetailResponse {
+  int64 id = 1;
+  string name = 2;
+  int64 base_price = 3;
+  repeated Spesification spesifications = 4;
+}
+
+message Spesification {
+  int64 id = 1;
+  string name = 2;
+  string input_type = 3;
+  bool is_required = 4;
+  repeated SpesificationValue values = 5;
+}
+
+message SpesificationValue {
+  int64 id = 1;
+  string value = 2;
+  int64 additional_price = 3;
+}

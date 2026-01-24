@@ -1,0 +1,27 @@
+saat apa aja data perlu di simpan dicache dan dihapus di cache
+untuk service
+
+
+1. get all service 
+disimpan saat 
+get all services
+
+dan dihapus ketika create
+post service
+post media
+post service spesification
+post service spesification value
+
+dah dihapus ketika saat delete
+delete service
+delete media
+delete service spesification
+
+dan dihapus ketika saat update
+update status service
+update status service
+
+
+
+
+ 
