@@ -11,6 +11,7 @@ import (
 	"jasamc/config"
 	grpcJasa "jasamc/grpc"
 	"jasamc/infrastructure/log"
+	"jasamc/middleware"
 	"jasamc/proto/jasapb"
 	"jasamc/routes"
 	"net"
@@ -45,7 +46,10 @@ func main() {
 
 	port := cfg.App.Port
 
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(middleware.CORS([]string{"http://localhost:3000", "http://localhost:3001"}))
+	router.Use(gin.Logger())
 	router.Static("/static", "./uploads")
 	routes.SetupRoutes(router, *jasaHandler, cfg.Secret.JWTSecret)
 
