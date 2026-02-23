@@ -8,14 +8,15 @@ import (
 
 // model kategori jasa
 type CategoryJasa struct {
-	ID          int64          `json:"id" gorm:"primaryKey;autoIncrement"`
+	ID          int64          `json:"id" gorm:"primaryKey"`
 	Name        string         `json:"name"`
 	Description string         `json:"description"`
 	Slug        string         `json:"slug"`
 	IsActive    bool           `json:"is_active"`
 	Meta        datatypes.JSON `json:"meta"`
-	CreatedAt   time.Time      `json:"created_at" gorm:"autoCreateTimeUTC"`
-	UpdatedAt   time.Time      `json:"updated_at" gorm:"autoUpdateTimeUTC"`
+	Service     []Service      `json:"service" gorm:"foreignKey:CategoryID"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
 // param untuk create category jasa

@@ -39,7 +39,7 @@ func SetupRoutes(router *gin.Engine, jasaHandler handler.JasaHandler, jwtSecret 
 
 	// routes admin only
 	admin := router.Group("/api/v1/admin")
-	admin.Use(middleware.AuthMiddleware(jwtSecret, "admin"))
+	admin.Use(middleware.AdminMiddleware(jwtSecret, "admin"))
 
 	// category
 	admin.POST("/category", jasaHandler.CreateCategoryJasa)

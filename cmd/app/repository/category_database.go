@@ -12,9 +12,20 @@ import (
 // query category db
 
 // get by id
-func (r *JasaRepository) FindCategoryJasaByID(ctx context.Context, jasaID int64) (*models.CategoryJasa, error) {
+func (r *JasaRepository) FindCategoryJasaByID(
+	ctx context.Context,
+	jasaID int64,
+) (*models.CategoryJasa, error) {
+
 	var categoryJasa models.CategoryJasa
-	err := r.Database.WithContext(ctx).Table("service_categories").Where("id = ?", jasaID).First(&categoryJasa).Error
+
+	err := r.Database.WithContext(ctx).
+		Model(&models.CategoryJasa{}).
+		Preload("Service.Media").
+		Preload("Service.Spesification").
+		Preload("Service.Spesification.SpesificationValue").
+		Where("id = ?", jasaID).
+		First(&categoryJasa).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -24,7 +35,6 @@ func (r *JasaRepository) FindCategoryJasaByID(ctx context.Context, jasaID int64)
 	}
 
 	return &categoryJasa, nil
-
 }
 
 // get category jasa by name
