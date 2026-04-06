@@ -48,7 +48,7 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Recovery())
-	router.Use(middleware.CORS([]string{"http://localhost:3000", "http://localhost:3001"}))
+	router.Use(middleware.CORS([]string{"http://localhost:3000", "http://localhost:3001", "https://variative-giuseppe-duly.ngrok-free.dev"}))
 	router.Use(gin.Logger())
 	router.Static("/static", "./uploads")
 	routes.SetupRoutes(router, *jasaHandler, cfg.Secret.JWTSecret)

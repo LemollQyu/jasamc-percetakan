@@ -9,10 +9,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *JasaRepository) GetAllServices(ctx context.Context) ([]models.Service, error) {
-	var services []models.Service
+func (r *JasaRepository) GetAllServices(ctx context.Context) ([]models.FullService, error) {
+	var services []models.FullService
 
 	err := r.Database.WithContext(ctx).
+		Preload("Category").
 		Preload("Media").                            // preload semua media
 		Preload("Spesification").                    // preload spesifikasi
 		Preload("Spesification.SpesificationValue"). // preload nilai spesifikasi

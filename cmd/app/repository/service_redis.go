@@ -24,15 +24,15 @@ var (
 // GetAllServicesFromRedis get all services from redis
 func (r *JasaRepository) GetAllServicesFromRedis(
 	ctx context.Context,
-) ([]models.Service, error) {
+) ([]models.FullService, error) {
 
-	var services []models.Service
+	var services []models.FullService
 
 	serviceStr, err := r.Redis.Get(ctx, cacheKeyAllService).Result()
 	if err != nil {
 		if err == redis.Nil {
 			// cache miss
-			return []models.Service{}, nil
+			return []models.FullService{}, nil
 		}
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (r *JasaRepository) GetAllServicesFromRedis(
 // SetAllServicesToRedis set all services to redis
 func (r *JasaRepository) SetAllServicesToRedis(
 	ctx context.Context,
-	services []models.Service,
+	services []models.FullService,
 ) error {
 
 	data, err := json.Marshal(services)

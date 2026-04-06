@@ -11,7 +11,7 @@ import (
 
 func (s *JasaService) GetAllServices(
 	ctx context.Context,
-) ([]models.Service, error) {
+) ([]models.FullService, error) {
 
 	// 1. Redis GET
 	services, err := s.JasaRepo.GetAllServicesFromRedis(ctx)
@@ -36,7 +36,7 @@ func (s *JasaService) GetAllServices(
 	log.Logger.Infof("CACHE MISS services:all → DB RETURNED %d ROWS", len(services))
 
 	// 3. Redis SET ASYNC (DETACHED)
-	go func(data []models.Service) {
+	go func(data []models.FullService) {
 		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 

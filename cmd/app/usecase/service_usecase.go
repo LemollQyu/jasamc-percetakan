@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (u *JasaUsecase) GetAllJasa(ctx context.Context) ([]models.Service, error) {
+func (u *JasaUsecase) GetAllJasa(ctx context.Context) ([]models.FullService, error) {
 	// Panggil service
 	categories, err := u.JasaService.GetAllServices(ctx) // pastikan service return []models.CategoryJasa
 	if err != nil {
