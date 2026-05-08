@@ -9,20 +9,33 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *JasaRepository) GetAllServices(ctx context.Context) ([]models.FullService, error) {
+func (r *JasaRepository) GetAllServices(ctx context.Context, limit, offset int, search string) ([]models.FullService, int64, error) {
 	var services []models.FullService
+	var total int64
 
-	err := r.Database.WithContext(ctx).
-		Preload("Category").
-		Preload("Media").                            // preload semua media
-		Preload("Spesification").                    // preload spesifikasi
-		Preload("Spesification.SpesificationValue"). // preload nilai spesifikasi
-		Find(&services).Error
-	if err != nil {
-		return nil, err
+	query := r.Database.WithContext(ctx).Model(&models.FullService{})
+
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("name ILIKE ?", like)
 	}
 
-	// pastikan slice media dan spesifikasi tidak nil
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.
+		Preload("Category").
+		Preload("Media").
+		Preload("Spesification").
+		Preload("Spesification.SpesificationValue").
+		Limit(limit).
+		Offset(offset).
+		Find(&services).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
 	for i := range services {
 		if services[i].Media == nil {
 			services[i].Media = []models.ServiceMedia{}
@@ -30,7 +43,6 @@ func (r *JasaRepository) GetAllServices(ctx context.Context) ([]models.FullServi
 		if services[i].Spesification == nil {
 			services[i].Spesification = []models.ServiceSpesification{}
 		} else {
-			// pastikan nested SpesificationValue tidak nil
 			for j := range services[i].Spesification {
 				if services[i].Spesification[j].SpesificationValue == nil {
 					services[i].Spesification[j].SpesificationValue = []models.ServiceSpesificationValue{}
@@ -39,7 +51,7 @@ func (r *JasaRepository) GetAllServices(ctx context.Context) ([]models.FullServi
 		}
 	}
 
-	return services, nil
+	return services, total, nil
 }
 
 // get category jasa by name
@@ -523,4 +535,32 @@ func (r *JasaRepository) ToggleServiceSpesificationRequiredAndReturn(
 		Error
 
 	return &spesification, err
+}
+
+func (r *JasaRepository) UpdateEstimateServiceAndReturn(ctx context.Context, id int64, duration int) (*models.Service, error) {
+	result := r.Database.
+		WithContext(ctx).
+		Exec(`UPDATE services SET duration_per_unit = ? WHERE id = ?`, duration, id)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var service models.Service
+	err := r.Database.
+		WithContext(ctx).
+		Table("services").
+		Where("id = ?", id).
+		First(&service).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &service, nil
 }

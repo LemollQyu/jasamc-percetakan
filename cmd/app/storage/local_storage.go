@@ -65,7 +65,7 @@ func (s *LocalStorage) uploadFile(ctx context.Context, file *multipart.FileHeade
 // Ikon Layanan (Limit lebih ketat untuk keamanan dan efisiensi)
 func (s *LocalStorage) UploadServiceIcon(ctx context.Context, file *multipart.FileHeader) (string, error) {
 
-	const maxIconSize = 500 * 1024
+	const maxIconSize = 5000 * 1024
 	return s.uploadFile(ctx, file, "jasa/icon-service", []string{".svg", ".png"}, maxIconSize)
 }
 

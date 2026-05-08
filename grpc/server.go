@@ -56,5 +56,6 @@ func (s *GRPCServer) GetServiceDetail(
 		Name:           service.Name,
 		BasePrice:      int64(service.BasePrice),
 		Spesifications: specs,
+		Duration:       int32(service.Duration),
 	}, nil
 }

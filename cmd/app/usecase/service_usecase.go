@@ -12,17 +12,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (u *JasaUsecase) GetAllJasa(ctx context.Context) ([]models.FullService, error) {
-	// Panggil service
-	categories, err := u.JasaService.GetAllServices(ctx) // pastikan service return []models.CategoryJasa
+func (u *JasaUsecase) GetAllJasa(ctx context.Context, limit, offset int, search string) ([]models.FullService, int64, error) {
+	services, total, err := u.JasaService.GetAllServices(ctx, limit, offset, search)
 	if err != nil {
-		log.Logger.WithFields(logrus.Fields{
-			"error": err.Error(),
-		}).Error("failed to get all kategori jasa in usecase")
-		return nil, err
+		log.Logger.WithFields(logrus.Fields{"error": err.Error()}).
+			Error("failed to get all kategori jasa in usecase")
+		return nil, 0, err
 	}
-
-	return categories, nil
+	return services, total, nil
 }
 
 func (u *JasaUsecase) GetServiceByName(ctx context.Context, name string) (*models.Service, error) {
@@ -193,6 +190,7 @@ func (u *JasaUsecase) CreateAndUploadFileService(
 		Description: param.Description,
 		BasePrice:   param.BasePrice,
 		Media:       medias,
+		Duration:    param.Duration,
 	}
 
 	// =========================
@@ -629,6 +627,26 @@ func (u *JasaUsecase) GetServiceByIDFromRead(ctx context.Context, serviceID int6
 			"serviceID": serviceID,
 		})
 
+		return nil, err
+	}
+
+	return service, nil
+}
+
+func (u *JasaUsecase) UpdateEstimateService(ctx context.Context, serviceID int64, duration int) (*models.Service, error) {
+	service, err := u.JasaService.GetServiceByIDFromDB(ctx, serviceID)
+	if err != nil {
+		log.Logger.Error("jasaUsecase: u.JasaService.GetServiceByIDFromDB")
+		return nil, err
+	}
+
+	if service == nil {
+		return nil, errors.New("service tidak ditemukan")
+	}
+
+	service, err = u.JasaService.UpdateEstimateService(ctx, serviceID, duration)
+	if err != nil {
+		log.Logger.Error("jasaUsecase: u.JasaService.UpdateEstimateService")
 		return nil, err
 	}
 

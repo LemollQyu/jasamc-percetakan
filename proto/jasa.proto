@@ -17,7 +17,8 @@ message GetServiceDetailResponse {
   int64 id = 1;
   string name = 2;
   int64 base_price = 3;
-  repeated Spesification spesifications = 4;
+  int32 duration = 4;
+  repeated Spesification spesifications = 5;
 }
 
 message Spesification {

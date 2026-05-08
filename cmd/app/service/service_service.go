@@ -9,45 +9,48 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (s *JasaService) GetAllServices(
-	ctx context.Context,
-) ([]models.FullService, error) {
+func (s *JasaService) GetAllServices(ctx context.Context, limit, offset int, search string) ([]models.FullService, int64, error) {
+	// Cache hanya untuk page pertama tanpa filter pencarian
+	useCache := offset == 0 && search == ""
 
-	// 1. Redis GET
-	services, err := s.JasaRepo.GetAllServicesFromRedis(ctx)
-	if err != nil {
-		log.Logger.Error("REDIS GET ERROR (services:all)", err)
+	if useCache {
+		services, err := s.JasaRepo.GetAllServicesFromRedis(ctx)
+		if err != nil {
+			log.Logger.Error("REDIS GET ERROR (services:all)", err)
+		}
+		if len(services) > 0 {
+			log.Logger.Info("CACHE HIT services:all")
+			total := int64(len(services))
+			end := limit
+			if end > len(services) {
+				end = len(services)
+			}
+			return services[:end], total, nil
+		}
 	}
 
-	if len(services) > 0 {
-		log.Logger.Info("CACHE HIT services:all")
-		return services, nil
-	}
-
-	// 2. DB
-	services, err = s.JasaRepo.GetAllServices(ctx)
+	services, total, err := s.JasaRepo.GetAllServices(ctx, limit, offset, search)
 	if err != nil {
-		log.Logger.WithFields(logrus.Fields{
-			"error": err.Error(),
-		}).Error("jasaService: gagal di s.JasaRepo.GetAllServices")
-		return nil, err
+		log.Logger.WithFields(logrus.Fields{"error": err.Error()}).
+			Error("jasaService: gagal di s.JasaRepo.GetAllServices")
+		return nil, 0, err
 	}
 
 	log.Logger.Infof("CACHE MISS services:all → DB RETURNED %d ROWS", len(services))
 
-	// 3. Redis SET ASYNC (DETACHED)
-	go func(data []models.FullService) {
-		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
+	if useCache {
+		go func(data []models.FullService) {
+			bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := s.JasaRepo.SetAllServicesToRedis(bgCtx, data); err != nil {
+				log.Logger.Error("REDIS SET ERROR services:all (BG)", err)
+			} else {
+				log.Logger.Info("REDIS SET services:all SUCCESS (BG)")
+			}
+		}(services)
+	}
 
-		if err := s.JasaRepo.SetAllServicesToRedis(bgCtx, data); err != nil {
-			log.Logger.Error("REDIS SET ERROR services:all (BG)", err)
-		} else {
-			log.Logger.Info("REDIS SET services:all SUCCESS (BG)")
-		}
-	}(services)
-
-	return services, nil
+	return services, total, nil
 }
 
 func (s *JasaService) GetServiceByName(ctx context.Context, name string) (*models.Service, error) {
@@ -477,4 +480,27 @@ func (s *JasaService) ToggleServiceSpesificationRequiredAndReturn(ctx context.Co
 	}
 
 	return serviceSpec, nil
+}
+
+func (s *JasaService) UpdateEstimateService(ctx context.Context, serviceID int64, duration int) (*models.Service, error) {
+	service, err := s.JasaRepo.UpdateEstimateServiceAndReturn(ctx, serviceID, duration)
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{
+			"service_id": serviceID,
+			"error":      err.Error(),
+		}).Error("gagal di service UpdateEstimateService")
+		return nil, err
+	}
+
+	// invalidate cache
+	err = s.JasaRepo.DeleteServiceCacheByID(ctx, serviceID)
+	if err != nil {
+		log.Logger.Errorf("gagal hapus redis service:%d", serviceID)
+	}
+
+	if err := s.JasaRepo.DeleteAllServiceCache(ctx); err != nil {
+		log.Logger.Error("Gagal menghapus cache Redis services:all", err)
+	}
+
+	return service, nil
 }

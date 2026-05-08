@@ -70,7 +70,8 @@ type GetServiceDetailResponse struct {
 	Id             int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Name           string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	BasePrice      int64                  `protobuf:"varint,3,opt,name=base_price,json=basePrice,proto3" json:"base_price,omitempty"`
-	Spesifications []*Spesification       `protobuf:"bytes,4,rep,name=spesifications,proto3" json:"spesifications,omitempty"`
+	Duration       int32                  `protobuf:"varint,4,opt,name=duration,proto3" json:"duration,omitempty"`
+	Spesifications []*Spesification       `protobuf:"bytes,5,rep,name=spesifications,proto3" json:"spesifications,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -122,6 +123,13 @@ func (x *GetServiceDetailResponse) GetName() string {
 func (x *GetServiceDetailResponse) GetBasePrice() int64 {
 	if x != nil {
 		return x.BasePrice
+	}
+	return 0
+}
+
+func (x *GetServiceDetailResponse) GetDuration() int32 {
+	if x != nil {
+		return x.Duration
 	}
 	return 0
 }
@@ -276,13 +284,14 @@ const file_proto_jasa_proto_rawDesc = "" +
 	"\x10proto/jasa.proto\x12\x04jasa\"8\n" +
 	"\x17GetServiceDetailRequest\x12\x1d\n" +
 	"\n" +
-	"service_id\x18\x01 \x01(\x03R\tserviceId\"\x9a\x01\n" +
+	"service_id\x18\x01 \x01(\x03R\tserviceId\"\xb6\x01\n" +
 	"\x18GetServiceDetailResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +
 	"\n" +
-	"base_price\x18\x03 \x01(\x03R\tbasePrice\x12;\n" +
-	"\x0espesifications\x18\x04 \x03(\v2\x13.jasa.SpesificationR\x0espesifications\"\xa5\x01\n" +
+	"base_price\x18\x03 \x01(\x03R\tbasePrice\x12\x1a\n" +
+	"\bduration\x18\x04 \x01(\x05R\bduration\x12;\n" +
+	"\x0espesifications\x18\x05 \x03(\v2\x13.jasa.SpesificationR\x0espesifications\"\xa5\x01\n" +
 	"\rSpesification\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n" +

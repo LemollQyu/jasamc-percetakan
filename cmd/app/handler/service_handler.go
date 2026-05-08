@@ -5,9 +5,11 @@ import (
 	"jasamc/infrastructure/log"
 	"jasamc/models"
 	"jasamc/utils"
+	"math"
 	"mime/multipart"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -15,19 +17,34 @@ import (
 
 // ambil semua data jasa
 func (h *JasaHandler) GetAllJasa(c *gin.Context) {
-	categories, err := h.JasaUsecase.GetAllJasa(c.Request.Context())
-	if err != nil {
-		log.Logger.Error("JasaHandler: h.JasaUsecase.GetAllCategoryJasa", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error_message": "Kesalahan dari system",
-		})
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := strings.TrimSpace(c.DefaultQuery("search", ""))
 
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+
+	services, total, err := h.JasaUsecase.GetAllJasa(c.Request.Context(), limit, offset, search)
+	if err != nil {
+		log.Logger.Error("JasaHandler: h.JasaUsecase.GetAllJasa", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error_message": "Kesalahan dari system"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Success",
-		"data":    categories,
+		"data":    services,
+		"meta": gin.H{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": int(math.Ceil(float64(total) / float64(limit))),
+		},
 	})
 }
 
@@ -585,5 +602,41 @@ func (h *JasaHandler) GetService(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Success",
 		"data":    service,
+	})
+}
+
+func (h *JasaHandler) UpdateEstimateService(c *gin.Context) {
+	idService := c.Param("serviceID")
+	id, err := strconv.ParseInt(idService, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_message": "invalid service id"})
+		return
+	}
+
+	var param models.RequestUpdateEstimate
+	if err := c.ShouldBindJSON(&param); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error_message": "invalid param"})
+		return
+	}
+
+	service, err := h.JasaUsecase.UpdateEstimateService(c.Request.Context(), id, param.Duration)
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{
+			"id":    id,
+			"error": err.Error(),
+		}).Error("Handler gagal, h.JasaUsecase.UpdateEstimateService")
+
+		if err.Error() == "service tidak ditemukan" {
+			c.JSON(http.StatusNotFound, gin.H{"error_message": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error_message": "Kesalahan dari system"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("Successfully update estimate service %d", id),
+		"data":    service.Duration,
 	})
 }

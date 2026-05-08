@@ -14,6 +14,7 @@ type Service struct {
 	Description   string                 `json:"description" binding:"required" gorm:"type:text;not null"`
 	BasePrice     float64                `json:"base_price" gorm:"type:numeric(12,2)"`
 	IsActive      bool                   `json:"is_active" gorm:"default:true"`
+	Duration      int                    `json:"duration_per_unit" gorm:"column:duration_per_unit;default:0"`
 	CreatedAt     time.Time              `json:"created_at" gorm:"autoCreateTimeUTC"`
 	UpdatedAt     time.Time              `json:"updated_at" gorm:"autoUpdateTimeUTC"`
 	Media         []ServiceMedia         `json:"media" gorm:"foreignKey:ServiceID"` // slice untuk media
@@ -56,6 +57,7 @@ type RequestService struct {
 	CategoryID  int64   `form:"category_id" binding:"required,gt=0"`
 	Name        string  `form:"name" binding:"required,max=200"`
 	Description string  `form:"description" binding:"required"`
+	Duration    int     `form:"duration_per_unit" binding:"gte=0"`
 	BasePrice   float64 `form:"base_price" binding:"gte=0"`
 }
 
@@ -83,4 +85,8 @@ type RequestAddServiceMedia struct {
 type RequestUpdateServiceSpesificationValue struct {
 	Value           string  `json:"value"`
 	AdditionalPrice float64 `json:"additional_price" binding:"gte=0"`
+}
+
+type RequestUpdateEstimate struct {
+	Duration int `json:"duration_per_unit" binding:"required,gt=0"`
 }

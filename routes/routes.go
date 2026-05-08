@@ -18,8 +18,8 @@ func SetupRoutes(router *gin.Engine, jasaHandler handler.JasaHandler, jwtSecret 
 	groupV1.GET("/categories", jasaHandler.GetAllCategoryJasa)
 	groupV1.GET("/category/:id", jasaHandler.GetCategoryJasaByID)
 
-	groupV1.GET("/services", jasaHandler.GetAllJasa)
-	groupV1.GET("/service/:serviceID", jasaHandler.GetService)
+	groupV1.GET("/services", jasaHandler.GetAllJasa)           // ini
+	groupV1.GET("/service/:serviceID", jasaHandler.GetService) // ini
 
 	// route delete services, berarti dengan service_media
 	// dan juga storagenya yang ada di service itu
@@ -62,5 +62,6 @@ func SetupRoutes(router *gin.Engine, jasaHandler handler.JasaHandler, jwtSecret 
 		"/service/:serviceID/specification/:specID/value/:valueID",
 		jasaHandler.UpdateServiceSpesificationValue,
 	)
+	admin.PATCH("/service/:serviceID/estimate", jasaHandler.UpdateEstimateService)
 
 }
