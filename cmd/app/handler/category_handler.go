@@ -191,7 +191,7 @@ func (h *JasaHandler) UpdateCategoryIcon(c *gin.Context) {
 			return
 		}
 
-		if err.Error() == "icon hanya png dan svg" || err.Error() == "ukuran icon maksimal 2MB" {
+		if err.Error() == "icon hanya png dan svg dan webp" || err.Error() == "ukuran icon maksimal 2MB" {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error_message": err.Error(),
 			})

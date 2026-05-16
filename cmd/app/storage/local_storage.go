@@ -66,7 +66,7 @@ func (s *LocalStorage) uploadFile(ctx context.Context, file *multipart.FileHeade
 func (s *LocalStorage) UploadServiceIcon(ctx context.Context, file *multipart.FileHeader) (string, error) {
 
 	const maxIconSize = 5000 * 1024
-	return s.uploadFile(ctx, file, "jasa/icon-service", []string{".svg", ".png"}, maxIconSize)
+	return s.uploadFile(ctx, file, "jasa/icon-service", []string{".svg", ".png", ".webp"}, maxIconSize)
 }
 
 // Upload thumbnail
@@ -142,8 +142,8 @@ func (s *LocalStorage) UploadCategoryIcon(ctx context.Context, file *multipart.F
 		return "", fmt.Errorf("ukuran icon maksimal 2MB")
 	}
 	ext := strings.ToLower(filepath.Ext(file.Filename))
-	if ext != ".png" && ext != ".svg" {
-		return "", fmt.Errorf("icon hanya png dan svg")
+	if ext != ".png" && ext != ".svg" && ext != ".webp" {
+		return "", fmt.Errorf("icon hanya png dan svg dan webp")
 	}
 
 	dir := filepath.Join(s.BaseDir, "jasa", "icon-category")
