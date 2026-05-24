@@ -144,8 +144,6 @@ func (r *JasaRepository) UpdateCategoryMeta(
 		Error
 }
 
-// update categirynya (ini masih bingung di implemetasikan atau tidak)
-
 // update setstatus caetgory
 func (r *JasaRepository) ToggleCategoryJasaActiveAndReturn(
 	ctx context.Context,
