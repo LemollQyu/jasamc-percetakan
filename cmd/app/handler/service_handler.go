@@ -24,8 +24,13 @@ func (h *JasaHandler) GetAllJasa(c *gin.Context) {
 	if page < 1 {
 		page = 1
 	}
-	if limit < 1 || limit > 100 {
+	// if limit < 1 || limit > 100 {
+	// 	limit = 10
+	// }
+	if limit < 1 {
 		limit = 10
+	} else if limit > 1000 {
+		limit = 1000
 	}
 	offset := (page - 1) * limit
 
@@ -638,5 +643,46 @@ func (h *JasaHandler) UpdateEstimateService(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": fmt.Sprintf("Successfully update estimate service %d", id),
 		"data":    service.Duration,
+	})
+}
+
+// ambil semua service berdasarkan kategori
+func (h *JasaHandler) GetServicesByCategory(c *gin.Context) {
+	categoryID := strings.TrimSpace(c.Param("categoryID"))
+	if categoryID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error_message": "categoryID tidak boleh kosong"})
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := strings.TrimSpace(c.DefaultQuery("search", ""))
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	} else if limit > 1000 {
+		limit = 1000
+	}
+	offset := (page - 1) * limit
+
+	services, total, err := h.JasaUsecase.GetServicesByCategory(c.Request.Context(), categoryID, limit, offset, search)
+	if err != nil {
+		log.Logger.Error("JasaHandler: h.JasaUsecase.GetServicesByCategory", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error_message": "Kesalahan dari system"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Success",
+		"data":    services,
+		"meta": gin.H{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": int(math.Ceil(float64(total) / float64(limit))),
+		},
 	})
 }

@@ -652,3 +652,14 @@ func (u *JasaUsecase) UpdateEstimateService(ctx context.Context, serviceID int64
 
 	return service, nil
 }
+
+// usecase ambil semua service sesuai dari kategorinya
+func (u *JasaUsecase) GetServicesByCategory(ctx context.Context, categoryID string, limit, offset int, search string) ([]models.FullService, int64, error) {
+	services, total, err := u.JasaService.GetServicesByCategory(ctx, categoryID, limit, offset, search)
+	if err != nil {
+		log.Logger.WithFields(logrus.Fields{"error": err.Error()}).
+			Error("failed to get services by category in usecase")
+		return nil, 0, err
+	}
+	return services, total, nil
+}

@@ -13,6 +13,22 @@ func (s *JasaService) GetAllServices(ctx context.Context, limit, offset int, sea
 	// Cache hanya untuk page pertama tanpa filter pencarian
 	useCache := offset == 0 && search == ""
 
+	// if useCache {
+	// 	services, err := s.JasaRepo.GetAllServicesFromRedis(ctx)
+	// 	if err != nil {
+	// 		log.Logger.Error("REDIS GET ERROR (services:all)", err)
+	// 	}
+	// 	if len(services) > 0 {
+	// 		log.Logger.Info("CACHE HIT services:all")
+	// 		total := int64(len(services))
+	// 		end := limit
+	// 		if end > len(services) {
+	// 			end = len(services)
+	// 		}
+	// 		return services[:end], total, nil
+	// 	}
+	// }
+
 	if useCache {
 		services, err := s.JasaRepo.GetAllServicesFromRedis(ctx)
 		if err != nil {
@@ -21,11 +37,17 @@ func (s *JasaService) GetAllServices(ctx context.Context, limit, offset int, sea
 		if len(services) > 0 {
 			log.Logger.Info("CACHE HIT services:all")
 			total := int64(len(services))
-			end := limit
+
+			// Hitung slice yang benar dengan offset + limit
+			start := offset
+			if start > len(services) {
+				return []models.FullService{}, total, nil
+			}
+			end := start + limit
 			if end > len(services) {
 				end = len(services)
 			}
-			return services[:end], total, nil
+			return services[start:end], total, nil // ← pakai offset juga
 		}
 	}
 
@@ -503,4 +525,15 @@ func (s *JasaService) UpdateEstimateService(ctx context.Context, serviceID int64
 	}
 
 	return service, nil
+}
+
+// service ambil semua service sesuai dari kategorinya
+func (s *JasaService) GetServicesByCategory(ctx context.Context, categoryID string, limit, offset int, search string) ([]models.FullService, int64, error) {
+	services, total, err := s.JasaRepo.GetServicesByCategory(ctx, categoryID, limit, offset, search)
+	if err != nil {
+		log.Logger.Error("jasaService: gagal di s.JasaRepo.GetServicesByCategory")
+		return nil, 0, err
+	}
+
+	return services, total, nil
 }

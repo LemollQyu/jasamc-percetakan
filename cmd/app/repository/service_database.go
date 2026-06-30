@@ -564,3 +564,52 @@ func (r *JasaRepository) UpdateEstimateServiceAndReturn(ctx context.Context, id 
 
 	return &service, nil
 }
+
+// repo ambil semua service sesuai dari kategorinya
+func (r *JasaRepository) GetServicesByCategory(ctx context.Context, categoryID string, limit, offset int, search string) ([]models.FullService, int64, error) {
+	var services []models.FullService
+	var total int64
+
+	query := r.Database.WithContext(ctx).
+		Model(&models.FullService{}).
+		Where("category_id = ?", categoryID).
+		Where("is_active = ?", true)
+
+	if search != "" {
+		like := "%" + search + "%"
+		query = query.Where("name ILIKE ?", like)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.
+		Preload("Category").
+		Preload("Media").
+		Preload("Spesification").
+		Preload("Spesification.SpesificationValue").
+		Limit(limit).
+		Offset(offset).
+		Find(&services).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for i := range services {
+		if services[i].Media == nil {
+			services[i].Media = []models.ServiceMedia{}
+		}
+		if services[i].Spesification == nil {
+			services[i].Spesification = []models.ServiceSpesification{}
+		} else {
+			for j := range services[i].Spesification {
+				if services[i].Spesification[j].SpesificationValue == nil {
+					services[i].Spesification[j].SpesificationValue = []models.ServiceSpesificationValue{}
+				}
+			}
+		}
+	}
+
+	return services, total, nil
+}
